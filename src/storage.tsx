@@ -13,7 +13,7 @@ export async function storage(
       return set(name, value, db);
     },
     removeItem: (name) => {
-      del(name, db);
+      return del(name, db);
     },
     getAllKeys: () => {
       return keys(db);
