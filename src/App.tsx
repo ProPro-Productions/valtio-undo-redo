@@ -13,7 +13,6 @@ function App() {
             key={key}
             className='w-80 h-80 bg-slate-400 border-2 border-white'
             onClick={() => {
-              console.log("snjsnsnjsnj");
               store[key].value.stacks = [
                 ...store[key].value.stacks,
                 `${uuidv4()[0]}`,

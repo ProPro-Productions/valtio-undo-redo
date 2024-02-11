@@ -1,30 +1,201 @@
-# React + TypeScript + Vite
+This is an isolated version of the problem faced by undo redo feature on MapMap.
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+- As we run the project open the app we see an add button.
+- On clicking the add button a new map is created using.
 
-Currently, two official plugins are available:
+  ```jsx
+  // app.js line 49
+  onClick={() => {
+          const initVal = { stacks: [] };
+          store[`map${uuidv4()}`] = {
+            value: { ...initVal },
+            history: {
+              index: 0,
+              nodes: [{ createdAt: new Date(), snapshot: { ...initVal } }],
+              wip: undefined,
+            },
+          };
+        }}
+  ```
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- We see a new grey box which represents a new map on MapMap.
+- On clicking any map, we add a new item inside the clicked map using.
 
-## Expanding the ESLint configuration
+  ```jsx
+    // app.js line 15
+  onClick={() => {
+              store[key].value.stacks = [
+                ...store[key].value.stacks,
+                `${uuidv4()[0]}`,
+              ];
+            }}
+  ```
 
-If you are developing a production application, we recommend updating the configuration to enable type aware lint rules:
+- Whenever an item is added in the stacks array we call a subscribe on valtio and update the history using.
 
-- Configure the top-level `parserOptions` property like this:
+  ```js
+  // mapStore.js line 109
+  subscribe(store, (ops) => {
+    console.log(ops);
+    const firstKey = Object.values(ops[0][1])[0].toString();
+    if (shouldSaveHistory(ops, map(firstKey))) {
+      saveHistory(map(firstKey));
+    }
+  });
 
-```js
-export default {
-  // other rules...
-  parserOptions: {
-    ecmaVersion: 'latest',
-    sourceType: 'module',
-    project: ['./tsconfig.json', './tsconfig.node.json'],
-    tsconfigRootDir: __dirname,
-  },
-}
-```
+  // line 94
+  const shouldSaveHistory = (
+    ops: Parameters<Parameters<typeof subscribe>[1]>[0],
+    proxyObject: dataType,
+  ) => {
+    return ops.every(
+      (op) =>
+        op[1][1] === "value" &&
+        (op[0] !== "set" || op[2] !== proxyObject.history.wip),
+    );
+  };
+  ```
 
-- Replace `plugin:@typescript-eslint/recommended` to `plugin:@typescript-eslint/recommended-type-checked` or `plugin:@typescript-eslint/strict-type-checked`
-- Optionally add `plugin:@typescript-eslint/stylistic-type-checked`
-- Install [eslint-plugin-react](https://github.com/jsx-eslint/eslint-plugin-react) and add `plugin:react/recommended` & `plugin:react/jsx-runtime` to the `extends` list
+- after adding 5 itmes the data looks like this
+
+  ```js
+  {
+    "value": {
+        "stacks": [
+            "c",
+            "c",
+            "f"
+        ]
+    },
+    "history": {
+        "index": 3,
+        "nodes": [
+            {
+                "createdAt": "2024-02-11T06:53:02.889Z",
+                "snapshot": {
+                    "stacks": []
+                }
+            },
+            {
+                "createdAt": "2024-02-11T06:53:16.774Z",
+                "snapshot": {
+                    "stacks": [
+                        "c"
+                    ]
+                }
+            },
+            {
+                "createdAt": "2024-02-11T06:53:26.841Z",
+                "snapshot": {
+                    "stacks": [
+                        "c",
+                        "c"
+                    ]
+                }
+            },
+            {
+                "createdAt": "2024-02-11T06:53:37.659Z",
+                "snapshot": {
+                    "stacks": [
+                        "c",
+                        "c",
+                        "f"
+                    ]
+                }
+            }
+        ]
+    }
+  }
+  ```
+
+- we click the undo and redo button and the data after 3 undos looks like
+
+  ```js
+  {
+    "value": {
+        "stacks": [
+            "c",
+            "c",
+            "f"
+        ]
+    },
+    "history": {
+        "index": 3,
+        "nodes": [
+            {
+                "createdAt": "2024-02-11T06:53:02.889Z",
+                "snapshot": {
+                    "stacks": []
+                }
+            },
+            {
+                "createdAt": "2024-02-11T06:53:16.774Z",
+                "snapshot": {
+                    "stacks": [
+                        "c"
+                    ]
+                }
+            },
+            {
+                "createdAt": "2024-02-11T06:53:26.841Z",
+                "snapshot": {
+                    "stacks": [
+                        "c",
+                        "c"
+                    ]
+                }
+            },
+            {
+                "createdAt": "2024-02-11T06:53:37.659Z",
+                "snapshot": {
+                    "stacks": [
+                        "c",
+                        "c",
+                        "f"
+                    ]
+                }
+            },
+            {
+                "createdAt": "2024-02-11T07:52:41.479Z",
+                "snapshot": {
+                    "stacks": [
+                        "c",
+                        "c",
+                        "f",
+                        "e"
+                    ]
+                }
+            },
+            {
+                "createdAt": "2024-02-11T07:52:41.860Z",
+                "snapshot": {
+                    "stacks": [
+                        "c",
+                        "c",
+                        "f",
+                        "e",
+                        "d"
+                    ]
+                }
+            }
+        ],
+        "wip": {
+            "stacks": [
+                "c",
+                "c",
+                "f"
+            ]
+        }
+    }
+  }
+  ```
+
+## Expected Behavior
+
+Now when we add an itme by clicking on the grey box the item should get added to the value.stacks should be undated and also the history should be updated.
+
+<!--- Tell us what should happen -->
+
+## Current Behavior
+
+Only the value.stack is updatd but not the stanpshots and index inside the history. as the index remains same the next undo removes all the changes since the last undo.
