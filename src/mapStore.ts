@@ -97,7 +97,7 @@ const shouldSaveHistory = (
 ) => {
   return ops.every(
     (op) =>
-      op[1][1] === "value" &&
+      op[1].includes("stacks") &&
       (op[0] !== "set" || op[2] !== proxyObject.history.wip),
   );
 };
@@ -107,7 +107,7 @@ export const map = (firstKey: string) => {
 };
 
 subscribe(store, (ops) => {
-  console.log(ops);
+  console.log(ops, "dnjdndnnnk");
   const firstKey = Object.values(ops[0][1])[0].toString();
   if (shouldSaveHistory(ops, map(firstKey))) {
     saveHistory(map(firstKey));
